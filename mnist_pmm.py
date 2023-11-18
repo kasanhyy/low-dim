@@ -208,7 +208,9 @@ def syndata_unit(level='simple',
                  isLowDim=1,
                  max_size=10000,
                  eps=1,
-                 d2=4, plot_img=1):
+                 d2=4,
+                 plot_img=0,
+                 return_original_data=0):
     """
     A computing unit for SVM_accuracy with the following customized parameters
     :param level: 'simple' for  8*8, 'complex' for 28*28
@@ -217,6 +219,7 @@ def syndata_unit(level='simple',
     :param eps: privacy parameter
     :param d2: lower dimension
     :param plot_img: Boolean, if true, plot the image of data
+    :param return_original_data: Boolean, if true return original data
     :return: the SVM accuracy
     """
     if level == 'simple':
@@ -229,7 +232,14 @@ def syndata_unit(level='simple',
         plotLabeled(syndata, n, eps, level)
 
     syn_x, syn_y = list2labels(syndata)
-    return syn_x, syn_y, test_x, test_y
+    if return_original_data:
+        return  x, y, syn_x, syn_y, test_x, test_y
+    else:
+        return syn_x, syn_y, test_x, test_y
+
+
+def var_accuracy(x, y, syn_x, syn_y):
+
 
 
 def svm_accuracy(train_x, train_y, test_x, test_y):
