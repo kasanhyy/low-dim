@@ -131,6 +131,7 @@ def plotUnlabeled(data, true_size, eps=1, A=5, B=5, level='simple'):
     fig.suptitle(f'MNIST synthetic data, n={true_size}, d={d}, eps={eps}', size=16)
     plt.show()
 
+import pdb
 
 def plotLabeled(data, true_size, eps=1, level='simple'):
     """
@@ -146,7 +147,11 @@ def plotLabeled(data, true_size, eps=1, level='simple'):
     for i in range(4):
         for j in range(5):
             label = 5 * (i // 2) + j
-            pic = data[label][np.random.randint(len(data[label]))]
+            data_num = len(data[label])
+            if data_num != 0:
+                pic = data[label][np.random.randint(data_num)]
+            else:
+                continue
             newshape = (8, 8) if level == 'simple' else (28, 28)
             pic = np.reshape(pic, newshape)
             plt.subplot(4, 5, 5 * i + j + 1)
@@ -156,6 +161,7 @@ def plotLabeled(data, true_size, eps=1, level='simple'):
     # plt.axis('off')
     fig.suptitle(f'n={true_size}, eps={eps}', size=16)
     plt.show()
+    pdb.set_trace()
 
 
 def list2labels(data_list):
@@ -259,7 +265,7 @@ def multi_eps_plot_svm():
     # simulate in original dimension
     y = []
     for eps in eps_list:
-        print(eps)
+        print(f'eps={eps}, direct pmm')
         s = 0
         for i in range(iter):
             s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, isLowDim=0))
@@ -270,7 +276,7 @@ def multi_eps_plot_svm():
     y2 = [[] for i in range(len(dims))]
     for i in range(len(dims)):
         for eps in eps_list:
-            print(eps)
+            print(f'eps={eps}, d\'={dims[i]}')
             s = 0
             for j in range(iter):
                 s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, d2=dims[i]))
