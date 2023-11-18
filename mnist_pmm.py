@@ -141,7 +141,7 @@ def plotLabeled(data, true_size, eps=1, level='simple'):
     :param level: 'simple' for  8*8, 'complex' for 28*28
     :return: None
     """
-    d = len(data[0][0])
+    # d = len(data[0][0])
     fig, axs = plt.subplots(4, 5)
     for i in range(4):
         for j in range(5):
@@ -198,29 +198,38 @@ def unit():
     # print()
 
 
-def svm_unit(level='simple',
-                  isLowDim=1,
-                  max_size=10000,
-                  eps=1,
-                  d2=4):
+def syndata_unit(level='simple',
+                 isLowDim=1,
+                 max_size=10000,
+                 eps=1,
+                 d2=4, plot_img=1):
     """
     A computing unit for SVM_accuracy with the following customized parameters
     :param level: 'simple' for  8*8, 'complex' for 28*28
-    :param isLowDim: Boolean, to indicate whether using low-dim subroutine
+    :param isLowDim: Boolean, if true, using low-dim subroutine
     :param max_size: the size of data if there's enough
     :param eps: privacy parameter
     :param d2: lower dimension
+    :param plot_img: Boolean, if true, plot the image of data
     :return: the SVM accuracy
     """
     if level == 'simple':
         x, y, test_x, test_y = mnistUCI()
-    elif level == 'complex':
+    else:
         x, y, test_x, test_y = mnist28data()
 
     n, syndata = labeledSynData(x, y, isLowDim, eps=eps, max_size=max_size, d2=d2)
-    plotLabeled(syndata, n, eps, level)
+    if plot_img:
+        plotLabeled(syndata, n, eps, level)
 
-    train_x, train_y = list2labels(syndata)
+    syn_x, syn_y = list2labels(syndata)
+    return syn_x, syn_y, test_x, test_y
+
+
+def svm_accuracy(train_x, train_y, test_x, test_y):
+    """
+    :return: the accuracy of the SVM task
+    """
     model = svm.LinearSVC(max_iter=5000)
     model.fit(train_x, train_y)
     z = model.predict(test_x)
@@ -253,7 +262,7 @@ def multi_eps_plot_svm():
         print(eps)
         s = 0
         for i in range(iter):
-            s += svm_unit(level=level, max_size=n, eps=eps, isLowDim=0)
+            s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, isLowDim=0))
         s /= iter
         y.append(s)
 
@@ -264,7 +273,7 @@ def multi_eps_plot_svm():
             print(eps)
             s = 0
             for j in range(iter):
-                s += svm_unit(level=level, max_size=n, eps=eps, d2=dims[i])
+                s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, d2=dims[i]))
             s /= iter
             y2[i].append(s)
 
