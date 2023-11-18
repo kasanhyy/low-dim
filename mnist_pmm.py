@@ -105,16 +105,16 @@ def labeledSynData(x, y, isLowDim=1, eps=1, max_size=10000, d2=8):
     return n, syndata
 
 
-def plotUnlabeled(data, true_size, eps, A=5, B=5, level='simple'):
+def plotUnlabeled(data, true_size, eps=1, A=5, B=5, level='simple'):
     """
-
+    Plot the image of data
     :param data: synthetic data to be plotted
-    :param true_size: the size of original
-    :param eps:
-    :param A:
-    :param B:
-    :param level:
-    :return:
+    :param true_size: the size of original data
+    :param eps: privacy param
+    :param A: num of rows of subgraphs
+    :param B: num of cols of subgraphs
+    :param level: 'simple' for  8*8, 'complex' for 28*28
+    :return: None
     """
     n, d = data.shape
     fig, axs = plt.subplots(A, B)
@@ -132,7 +132,15 @@ def plotUnlabeled(data, true_size, eps, A=5, B=5, level='simple'):
     plt.show()
 
 
-def plotLabeled(data, true_size, eps, level):
+def plotLabeled(data, true_size, eps=1, level='simple'):
+    """
+    Plot the image of data in labels with 4x5 many subgraphs
+    :param data: synthetic data to be plotted
+    :param true_size: the size of original data
+    :param eps: privacy param
+    :param level: 'simple' for  8*8, 'complex' for 28*28
+    :return: None
+    """
     d = len(data[0][0])
     fig, axs = plt.subplots(4, 5)
     for i in range(4):
@@ -151,11 +159,17 @@ def plotLabeled(data, true_size, eps, level):
 
 
 def list2labels(data_list):
+    """
+    Change the list of data into one array
+    :param data_list: [data0, data1, ..., data9]
+    :return: array of data with labels
+    """
     return np.concatenate(data_list), np.concatenate(
         [i * np.ones(len(data_list[i])) for i in range(10)])
 
 
 def unit():
+    """ Old unit, please use svm_unit()"""
     level = 'complex'  # complex -- 60000*28*28, simple -- 1300 * 8*8
     isLowDim = 0
     d2 = 4 if level == 'simple' else 4
@@ -184,11 +198,20 @@ def unit():
     # print()
 
 
-def accuracy_unit(level='simple',
+def svm_unit(level='simple',
                   isLowDim=1,
                   max_size=10000,
                   eps=1,
                   d2=4):
+    """
+    A computing unit for SVM_accuracy with the following customized parameters
+    :param level: 'simple' for  8*8, 'complex' for 28*28
+    :param isLowDim: Boolean, to indicate whether using low-dim subroutine
+    :param max_size: the size of data if there's enough
+    :param eps: privacy parameter
+    :param d2: lower dimension
+    :return: the SVM accuracy
+    """
     if level == 'simple':
         x, y, test_x, test_y = mnistUCI()
     elif level == 'complex':
@@ -204,8 +227,6 @@ def accuracy_unit(level='simple',
     return np.sum(z == test_y) / z.size
 
 
-import matplotlib.pyplot as plt
-
 if __name__ == '__main__':
     # eps_list = np.array([1, 2, 4, 8, 16, 32])
     # eps_list = np.logspace(-2, 2, 5)
@@ -219,7 +240,7 @@ if __name__ == '__main__':
         print(eps)
         s = 0
         for i in range(iter):
-            s += accuracy_unit(level=level, max_size=n, eps=eps, isLowDim=0)
+            s += svm_unit(level=level, max_size=n, eps=eps, isLowDim=0)
         s /= iter
         y.append(s)
 
@@ -232,7 +253,7 @@ if __name__ == '__main__':
             print(eps)
             s = 0
             for j in range(iter):
-                s += accuracy_unit(level=level, max_size=n, eps=eps, d2=dims[i])
+                s += svm_unit(level=level, max_size=n, eps=eps, d2=dims[i])
             s /= iter
             y2[i].append(s)
 
