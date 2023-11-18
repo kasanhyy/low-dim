@@ -238,10 +238,6 @@ def syndata_unit(level='simple',
         return syn_x, syn_y, test_x, test_y
 
 
-def var_accuracy(x, y, syn_x, syn_y):
-
-
-
 def svm_accuracy(train_x, train_y, test_x, test_y):
     """
     :return: the accuracy of the SVM task
