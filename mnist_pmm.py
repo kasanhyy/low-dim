@@ -14,6 +14,9 @@ from check import *
 
 
 def mnist8data():
+    """
+    :return: The dataset of handwritten digits of size 8*8
+    """
     mnist = load_digits()
     x, test_x, y, test_y = train_test_split(mnist.data, mnist.target, test_size=0.25,
                                             random_state=np.random.randint(1000))
@@ -21,6 +24,9 @@ def mnist8data():
 
 
 def mnistUCI():
+    """
+    :return: The dataset of handwritten digits of size 8*8, larger amount
+    """
     with open('optical+recognition+of+handwritten+digits/optdigits.tra') as fp:
         lines = fp.readlines()
         lines = [line.split(',') for line in lines]
@@ -35,6 +41,9 @@ def mnistUCI():
 
 
 def mnist28data():
+    """
+    :return: The dataset of handwritten digits of size 28*28
+    """
     (x_train, y_train), (x_test, y_test) = mnist28.load_data()  # 载入数据
     x_train, x_test = x_train / 255.0, x_test / 255.0  # 3. 数据归一化， 范围0到1之间，因为像素值的范围是0~255
     x_train = np.reshape(x_train, (len(x_train), 784))
@@ -42,7 +51,20 @@ def mnist28data():
     return x_train, y_train, x_test, y_test
 
 
-def unlabeledSynData(x, y, isLowDim, eps=1, max_size=10000, d2=4, label=-1):
+def unlabeledSynData(x, y=np.zeros(1), isLowDim=0, eps=1, max_size=10000, d2=4, label=-1):
+    """
+    Generate synthetic data with non-labelled original data, or for a particular label
+    :param x: original data
+    :param y: labels
+    :param isLowDim: Boolean for whether to use low-dim algorithm
+    :param eps: privacy parameter
+    :param max_size: the size of data if there's enough
+    :param d2: lower dimension
+    :param label: -1 if non-labelled, or indicate the specific label
+    :return: (the actual size, synthetic data)
+    """
+    if not y.any():
+        label = -1
     if label != -1:
         x = np.array([x[i] for i in range(len(x)) if y[i] == label])
 
@@ -55,7 +77,18 @@ def unlabeledSynData(x, y, isLowDim, eps=1, max_size=10000, d2=4, label=-1):
     return n, syndata
 
 
-def labeledSynData(x, y, isLowDim, eps=1, max_size=10000, d2=8):
+def labeledSynData(x, y, isLowDim=1, eps=1, max_size=10000, d2=8):
+    """
+    Generate synthetic data with labelled data
+    :param x: original data
+    :param y: labels
+    :param isLowDim: Boolean for whether to use low-dim algorithm
+    :param eps: privacy parameter
+    :param max_size: the size of data if there's enough
+    :param d2: lower dimension
+    :param label: -1 if non-labelled, or indicate the specific label
+    :return: (the actual size, synthetic data)
+    """
     n = min(len(x), max_size)
 
     data10 = [0] * 10
@@ -73,6 +106,16 @@ def labeledSynData(x, y, isLowDim, eps=1, max_size=10000, d2=8):
 
 
 def plotUnlabeled(data, true_size, eps, A=5, B=5, level='simple'):
+    """
+
+    :param data: synthetic data to be plotted
+    :param true_size: the size of original
+    :param eps:
+    :param A:
+    :param B:
+    :param level:
+    :return:
+    """
     n, d = data.shape
     fig, axs = plt.subplots(A, B)
     for i in range(A):
