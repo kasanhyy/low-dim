@@ -51,7 +51,7 @@ def mnist28data():
     return x_train, y_train, x_test, y_test
 
 
-def unlabeledSynData(x, y=np.zeros(1), isLowDim=0, eps=1, max_size=10000, d2=4, label=-1):
+def unlabeledSynData(x, y=np.zeros(1), isLowDim=1, eps=1, max_size=10000, d2=4, label=-1):
     """
     Generate synthetic data with non-labelled original data, or for a particular label
     :param x: original data
@@ -227,14 +227,27 @@ def svm_unit(level='simple',
     return np.sum(z == test_y) / z.size
 
 
-if __name__ == '__main__':
+def multi_eps_plot_svm():
+    """
+    Plot the accuracy rate with eps in "eps_list". One experiment in original dimension and the others in "dims".
+    eps_list:   the eps to be chosen
+    n:          the number of data to analyze
+    level:      'simple' for 8*8, 'complex' for 28*28
+    iter:       num of repetition for accuracy
+    dims:       the lower dimension levels, besides original dimension
+    :return: None
+    """
+
     # eps_list = np.array([1, 2, 4, 8, 16, 32])
-    # eps_list = np.logspace(-2, 2, 5)
-    eps_list = [1]
+    eps_list = np.logspace(-2, 2, 5)
+    # eps_list = [1]
     n = 10000
     level = 'simple'
     iter = 3
+    # dims = [2, 4, 6, 8, 10, 64]
+    dims = (2, 8, 10)
 
+    # simulate in original dimension
     y = []
     for eps in eps_list:
         print(eps)
@@ -244,9 +257,7 @@ if __name__ == '__main__':
         s /= iter
         y.append(s)
 
-    # dims = [2, 4, 6, 8, 10, 64]
-    dims = (2, 8, 10)
-    colors = ('b', 'c', 'g', 'k', 'm', 'brown')
+    # simulate in lower dimensions in dims
     y2 = [[] for i in range(len(dims))]
     for i in range(len(dims)):
         for eps in eps_list:
@@ -257,23 +268,24 @@ if __name__ == '__main__':
             s /= iter
             y2[i].append(s)
 
+    # Plot the result of y and y2[:]
+    colors = ('b', 'c', 'g', 'k', 'm', 'brown')
     x = range(len(eps_list))
     plt.plot(x, y, color='red', linewidth=1, linestyle='--', label='Direct PMM')
-    # plt.plot(x, y2, label='Low-dim PMM')
     for i in range(len(dims)):
         plt.plot(x, y2[i], color=colors[i], label=f'PMM d\'={dims[i]}')
+    # Plot parameters
     plt.xticks(x, eps_list)
     plt.xlabel('Epsilon')
     plt.ylabel('Average accuracy')
     plt.ylim((0, 1))
+
+    # The title and the name
     plt.title(f'n={n}, d\'={dims}')
     plt.legend()
     plt.savefig(f'image_res/2,n={n}, d2={dims}')
     plt.show()
 
 
-def func(x):
-    # x month
-    year = x * 16 - x * 12 * 0.175
-    tax = 0.2 * year - 1.692
-    return year - tax
+if __name__ == '__main__':
+    multi_eps_plot_svm()
