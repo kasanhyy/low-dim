@@ -131,7 +131,6 @@ def plotUnlabeled(data, true_size, eps=1, A=5, B=5, level='simple'):
     fig.suptitle(f'MNIST synthetic data, n={true_size}, d={d}, eps={eps}', size=16)
     plt.show()
 
-import pdb
 
 def plotLabeled(data, true_size, eps=1, level='simple'):
     """
@@ -161,7 +160,6 @@ def plotLabeled(data, true_size, eps=1, level='simple'):
     # plt.axis('off')
     fig.suptitle(f'n={true_size}, eps={eps}', size=16)
     plt.show()
-    pdb.set_trace()
 
 
 def list2labels(data_list):
@@ -171,7 +169,7 @@ def list2labels(data_list):
     :return: array of data with labels
     """
     return np.concatenate(data_list), np.concatenate(
-        [i * np.ones(len(data_list[i])) for i in range(10)])
+        [i * np.ones(len(data_list[i]), dtype=int) for i in range(10)])
 
 
 def unit():
@@ -209,8 +207,7 @@ def syndata_unit(level='simple',
                  max_size=10000,
                  eps=1,
                  d2=4,
-                 plot_img=0,
-                 return_original_data=0):
+                 plot_img=0):
     """
     A computing unit for SVM_accuracy with the following customized parameters
     :param level: 'simple' for  8*8, 'complex' for 28*28
@@ -219,7 +216,6 @@ def syndata_unit(level='simple',
     :param eps: privacy parameter
     :param d2: lower dimension
     :param plot_img: Boolean, if true, plot the image of data
-    :param return_original_data: Boolean, if true return original data
     :return: the SVM accuracy
     """
     if level == 'simple':
@@ -232,10 +228,64 @@ def syndata_unit(level='simple',
         plotLabeled(syndata, n, eps, level)
 
     syn_x, syn_y = list2labels(syndata)
-    if return_original_data:
-        return  x, y, syn_x, syn_y, test_x, test_y
+    return x, y, syn_x, syn_y, test_x, test_y
+
+
+def accuracy(x, y, syn_x, syn_y, test_x, test_y, accuracy_type='mean'):
+    """
+    :param x: original data
+    :param y: original labels
+    :param syn_x: synthetic data
+    :param syn_y: synthetic labels
+    :param test_x: test data
+    :param test_y: test labels
+    :param accuracy_type: string 'mean', 'cov', 'svm'
+    :return: corresponding error for 'mean' and 'cov', accuracy rate for 'svm'
+    """
+    if accuracy_type == 'svm':
+        return svm_accuracy(syn_x, syn_y, test_x, test_y)
+    elif accuracy_type == 'cov':
+        return cov_accuracy(x, y, syn_x, syn_y)
     else:
-        return syn_x, syn_y, test_x, test_y
+        return mean_accuracy(x, y, syn_x, syn_y)
+
+
+def mean_accuracy(x, y, syn_x, syn_y):
+    """
+    :return: the max mean error over all digits
+    """
+    n, d = x.shape
+    n_syn = len(syn_x)
+
+    mean_x = np.zeros((10, d))
+    for i in range(n):
+        mean_x[y[i]] += x[i]
+    mean_x /= n
+
+    mean_syn_x = np.zeros((10, d))
+    for i in range(n_syn):
+        mean_syn_x[syn_y[i]] += syn_x[i]
+    mean_syn_x /= n_syn
+    return np.max(np.abs(mean_x - mean_syn_x))
+
+
+def cov_accuracy(x, y, syn_x, syn_y):
+    """
+    :return: the cov mean error over all digits and all X_i X_j
+    """
+    n, d = x.shape
+    n_syn = len(syn_x)
+
+    cov_x = np.zeros((10, d, d))
+    for i in range(n):
+        cov_x[y[i]] += np.outer(x[i], x[i])
+    cov_x /= n
+
+    cov_syn_x = np.zeros((10, d, d))
+    for i in range(n_syn):
+        cov_syn_x[syn_y[i]] += np.outer(syn_x[i], syn_x[i])
+    cov_syn_x /= n
+    return np.max(np.abs(cov_x - cov_syn_x))
 
 
 def svm_accuracy(train_x, train_y, test_x, test_y):
@@ -248,7 +298,7 @@ def svm_accuracy(train_x, train_y, test_x, test_y):
     return np.sum(z == test_y) / z.size
 
 
-def multi_eps_plot_svm():
+def multi_eps_plot(accuracy_type='mean'):
     """
     Plot the accuracy rate with eps in "eps_list". One experiment in original dimension and the others in "dims".
     eps_list:   the eps to be chosen
@@ -266,7 +316,7 @@ def multi_eps_plot_svm():
     level = 'simple'
     iter = 3
     # dims = [2, 4, 6, 8, 10, 64]
-    dims = (2, 8, 10)
+    dims = (2, 4, 8, 10)
 
     # simulate in original dimension
     y = []
@@ -274,7 +324,7 @@ def multi_eps_plot_svm():
         print(f'eps={eps}, direct pmm')
         s = 0
         for i in range(iter):
-            s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, isLowDim=0))
+            s += accuracy(*syndata_unit(level=level, max_size=n, eps=eps, isLowDim=0), accuracy_type)
         s /= iter
         y.append(s)
 
@@ -285,7 +335,7 @@ def multi_eps_plot_svm():
             print(f'eps={eps}, d\'={dims[i]}')
             s = 0
             for j in range(iter):
-                s += svm_accuracy(*syndata_unit(level=level, max_size=n, eps=eps, d2=dims[i]))
+                s += accuracy(*syndata_unit(level=level, max_size=n, eps=eps, d2=dims[i]), accuracy_type)
             s /= iter
             y2[i].append(s)
 
@@ -295,18 +345,29 @@ def multi_eps_plot_svm():
     plt.plot(x, y, color='red', linewidth=1, linestyle='--', label='Direct PMM')
     for i in range(len(dims)):
         plt.plot(x, y2[i], color=colors[i], label=f'PMM d\'={dims[i]}')
+
     # Plot parameters
+    topic = 'svm accuracy' if accuracy_type == 'svm' else accuracy_type + ' error'
     plt.xticks(x, eps_list)
     plt.xlabel('Epsilon')
-    plt.ylabel('Average accuracy')
-    plt.ylim((0, 1))
+    plt.ylabel(f'Average {topic}')
+    if accuracy_type == 'svm':
+        plt.ylim((0, 1))
+    else:
+        plt.ylim((0, 0.4))
 
     # The title and the name
-    plt.title(f'n={n}, d\'={dims}')
+    topic += ' n=3487' if level == 'simple' else f' n={min(n, 60000)}'
+    plt.title(f'{topic}, d\'={dims}')
     plt.legend()
-    plt.savefig(f'image_res/2,n={n}, d2={dims}')
+    plt.savefig(f'image_res/{topic}, d2={dims}')
     plt.show()
 
 
 if __name__ == '__main__':
-    multi_eps_plot_svm()
+    # n = 10000
+    # level = 'simple'
+    # eps = 4
+    # datas = syndata_unit(level='simple', eps=eps, max_size=n, isLowDim=1, plot_img=1)
+    # print(accuracy(*datas, accuracy_type='mean'))
+    multi_eps_plot(accuracy_type='svm')
