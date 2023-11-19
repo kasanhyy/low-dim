@@ -91,6 +91,12 @@ def printCount(item):
 
 # To generate data, eps is the privacy parameter
 def pmm_data(true_data, eps=1, scale=1):
+    """
+    :param true_data: original data
+    :param eps: privacy parameter
+    :param scale: Repetition number if dataset is small
+    :return: synthetic dataset generating by PMM
+    """
     n, d = true_data.shape
     r = int(np.ceil(np.log2(eps * n)))
 

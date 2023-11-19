@@ -246,11 +246,17 @@ def accuracy(x, y, syn_x, syn_y, test_x, test_y, accuracy_type='mean'):
         return svm_accuracy(syn_x, syn_y, test_x, test_y)
     elif accuracy_type == 'cov':
         return cov_accuracy(x, y, syn_x, syn_y)
-    else:
+    elif accuracy_type == 'cov_fro':
+        return cov_accuracy(x, y, syn_x, syn_y, order='fro')
+    elif accuracy_type == 'mean':
         return mean_accuracy(x, y, syn_x, syn_y)
+    elif accuracy_type == 'mean_l2':
+        return mean_accuracy(x, y, syn_x, syn_y, order=2)
+    else:
+        raise ValueError('Accuracy type not supported')
 
 
-def mean_accuracy(x, y, syn_x, syn_y):
+def mean_accuracy(x, y, syn_x, syn_y, order=np.inf):
     """
     :return: the max mean error over all digits
     """
@@ -266,10 +272,10 @@ def mean_accuracy(x, y, syn_x, syn_y):
     for i in range(n_syn):
         mean_syn_x[syn_y[i]] += syn_x[i]
     mean_syn_x /= n_syn
-    return np.max(np.abs(mean_x - mean_syn_x))
+    return np.max(np.linalg.norm(mean_x - mean_syn_x, axis=1, ord=order))
 
 
-def cov_accuracy(x, y, syn_x, syn_y):
+def cov_accuracy(x, y, syn_x, syn_y, order=None):
     """
     :return: the cov mean error over all digits and all X_i X_j
     """
@@ -285,7 +291,10 @@ def cov_accuracy(x, y, syn_x, syn_y):
     for i in range(n_syn):
         cov_syn_x[syn_y[i]] += np.outer(syn_x[i], syn_x[i])
     cov_syn_x /= n
-    return np.max(np.abs(cov_x - cov_syn_x))
+    if order is None:
+        return np.max(np.abs(cov_x - cov_syn_x))
+    else:
+        return np.max(np.linalg.norm(cov_x - cov_syn_x, axis=(1,2), ord=order))
 
 
 def svm_accuracy(train_x, train_y, test_x, test_y):
@@ -353,8 +362,11 @@ def multi_eps_plot(accuracy_type='mean'):
     plt.ylabel(f'Average {topic}')
     if accuracy_type == 'svm':
         plt.ylim((0, 1))
-    else:
+    elif accuracy_type in ('mean', 'cov'):
         plt.ylim((0, 0.4))
+    else:
+        pass
+        # plt.ylim((0, 1))
 
     # The title and the name
     topic += ' n=3487' if level == 'simple' else f' n={min(n, 60000)}'
@@ -369,5 +381,7 @@ if __name__ == '__main__':
     # level = 'simple'
     # eps = 4
     # datas = syndata_unit(level='simple', eps=eps, max_size=n, isLowDim=1, plot_img=1)
+    # print(f'True data accuracy {svm_accuracy(datas[0], datas[1], datas[4], datas[5])}')
     # print(accuracy(*datas, accuracy_type='mean'))
-    multi_eps_plot(accuracy_type='svm')
+
+    multi_eps_plot(accuracy_type='mean')
