@@ -100,7 +100,7 @@ def labeledSynData(x, y, isLowDim=1, eps=1, max_size=10000, d2=8):
         if isLowDim:
             temp = proj_pmm_data(data10[i], eps=eps, d2=d2)
         else:
-            temp = pmm_data(data10[i], eps)
+            temp = pmm_data(data10[i], eps, scale=1)
         syndata[i] = temp
     return n, syndata
 
@@ -318,14 +318,14 @@ def multi_eps_plot(accuracy_type='mean'):
     :return: None
     """
 
-    # eps_list = np.array([1, 2, 4, 8, 16, 32])
-    eps_list = np.logspace(-2, 2, 5)
-    # eps_list = [1]
+    # eps_list = np.array([0.5, 1, 2, 4, 8])
+    # eps_list = np.logspace(-2, 2, 5)
+    eps_list = np.array([0.1, 0.3, 1, 3, 10, 30])
     n = 10000
     level = 'simple'
     iter = 3
-    # dims = [2, 4, 6, 8, 10, 64]
-    dims = (2, 4, 8, 10)
+
+    dims = (2, 4, 8, 12)
 
     # simulate in original dimension
     y = []
@@ -334,6 +334,7 @@ def multi_eps_plot(accuracy_type='mean'):
         s = 0
         for i in range(iter):
             s += accuracy(*syndata_unit(level=level, max_size=n, eps=eps, isLowDim=0), accuracy_type)
+            # pass
         s /= iter
         y.append(s)
 
@@ -362,26 +363,32 @@ def multi_eps_plot(accuracy_type='mean'):
     plt.ylabel(f'Average {topic}')
     if accuracy_type == 'svm':
         plt.ylim((0, 1))
-    elif accuracy_type in ('mean', 'cov'):
-        plt.ylim((0, 0.4))
+    # elif accuracy_type in ('mean', 'cov'):
+    #     plt.ylim((0, 0.4))
     else:
         pass
         # plt.ylim((0, 1))
 
     # The title and the name
-    topic += ' n=3487' if level == 'simple' else f' n={min(n, 60000)}'
+    topic += ' n=3823' if level == 'simple' else f' n={min(n, 60000)}'
     plt.title(f'{topic}, d\'={dims}')
     plt.legend()
-    plt.savefig(f'image_res/{topic}, d2={dims}')
+    if round(eps_list[1] / eps_list[0]) == 2:
+        plt.savefig(f'image_res/{topic}, d2={dims}, eps=logspace(2)')
+    elif round(eps_list[1] / eps_list[0]) == 3:
+        plt.savefig(f'image_res/{topic}, d2={dims}, eps=logspace(3)')
+    else:
+        plt.savefig(f'image_res/{topic}, d2={dims}')
     plt.show()
 
 
 if __name__ == '__main__':
-    # n = 10000
-    # level = 'simple'
-    # eps = 4
-    # datas = syndata_unit(level='simple', eps=eps, max_size=n, isLowDim=1, plot_img=1)
-    # print(f'True data accuracy {svm_accuracy(datas[0], datas[1], datas[4], datas[5])}')
+    n = 10000
+    level = 'simple'
+    eps = 3
+    datas = syndata_unit(level='simple', eps=eps, max_size=n, isLowDim=1, plot_img=1)
+    print(f"True data accuracy {accuracy(*datas, accuracy_type='svm')}")
+
     # print(accuracy(*datas, accuracy_type='mean'))
 
-    multi_eps_plot(accuracy_type='mean')
+    # multi_eps_plot(accuracy_type='cov_fro')

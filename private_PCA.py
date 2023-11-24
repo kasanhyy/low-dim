@@ -40,7 +40,7 @@ def proj_pmm_data(X, eps=1, d2=-1, scale=1, isNotShift=False):
     Xbar = np.mean(X, axis=0)
     M = X.T @ X / n - np.outer(Xbar, Xbar)
     #####################
-    sigma = 9 * d ** 2 / (eps * n)  # See if we can remove the d**2
+    sigma = 3 * 3 * d ** 2 / (eps * n)  # See if we can remove the d**2
     A = matrixLap(d) * sigma
     M2 = M + A
     vecs, sig_vals, _ = np.linalg.svd(M2, hermitian=True)
@@ -70,6 +70,7 @@ def proj_pmm_data(X, eps=1, d2=-1, scale=1, isNotShift=False):
     proj_basis = np.array(vecs[:, :d2])
     ###################
     shift_noise = np.random.laplace(scale=3 * d / (eps * n), size=d)
+    # shift_noise = np.random.laplace(scale=3 / (eps * n), size=d)
     shift_X = X - Xbar - shift_noise
     R = np.sqrt(d) + np.linalg.norm(Xbar + shift_noise)
 
