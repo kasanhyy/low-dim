@@ -3,9 +3,9 @@ import ot.plot
 from scipy.stats import linregress
 import matplotlib.pyplot as plt
 from pmm import pmm_data
-from psmm import psmm_data
 
-from sklearn.datasets._samples_generator import make_blobs, make_regression
+from sklearn.datasets._samples_generator import make_blobs
+
 
 def computeW1(data1, data2, metric="chebyshev", plot_data_pts=False, plot_ot=False):
     n1 = len(data1)

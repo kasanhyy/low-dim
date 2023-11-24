@@ -10,8 +10,6 @@ from sklearn import svm
 import matplotlib.pyplot as plt
 from plot import computeW1, plotW1
 
-from check import *
-
 
 def mnist8data():
     """
