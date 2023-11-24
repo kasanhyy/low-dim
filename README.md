@@ -1,6 +1,6 @@
 # Low-dimensional PMM
 
-This project is to simulate the result in the paper *Differentially private low-dimensional representation of high-dimensional data*. The algorithm is applied in the scenario of recognizing hand-written digits. More details of the algorithm can be found at https://arxiv.org/abs/2305.17148.
+This project is to simulate the result in the paper *Differentially private low-dimensional representation of high-dimensional data*. The algorithm is applied in the scenario of recognizing handwritten digits. More details of the algorithm can be found at https://arxiv.org/abs/2305.17148.
 
 
 
